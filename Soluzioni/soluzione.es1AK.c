@@ -7,12 +7,12 @@ void usage(char* prog_name)
     fprintf(stderr,"Usage:\n\t%s: stud1 stud2 .. studM \n", prog_name);
 }
 
-int main(int argc, char* argv[]){    
+int main(int argc, char* argv[]){
     int Ni = 0;
     int Nm = 0;
     int Ne = 0;
     int i,j;
-    
+
     if(argc == 1){
         printf("Sintassi sbagliata.\n");
         usage(argv[0]);
@@ -24,7 +24,7 @@ int main(int argc, char* argv[]){
             return 0;
         }
     }
-    
+
     for(int i=1; i<argc; i++){
         if(strncmp(argv[i], "MED", 3) && strncmp(argv[i], "ING", 3) && strncmp(argv[i], "ECO", 3)){
             printf("Errore: l'identificatore della scuola di %s non è corretto.\n", argv[i]);

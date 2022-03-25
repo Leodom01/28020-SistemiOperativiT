@@ -3,8 +3,11 @@
 #include <stdio.h>
 #include <time.h>
 #include <sys/wait.h>
+#include <sys/types.h>
 #include <string.h>
 #include <stdbool.h>
+
+#define MAX_STRING_LENGTH 255
 
 int main(int argc, char *argv[]){
 
@@ -21,51 +24,65 @@ int main(int argc, char *argv[]){
   strcpy(dir_1, argv[1]);
   strcpy(dir_2, argv[2]);
   int status;
-  bool childError = false;
 
   //Creazione di tutti i figli con operazione dei figli
   for(int i = 3; i < argc; i++){
     int pid = fork();
     if(pid == 0){           //Codice eseguito dal figlio
       if(getpid()%2 == 0){  //Eseguito da figli con pid pari
-        char source[2048];
-        strcpy(source, dir_1);
-        strcat(source, "/");
-        strcat(source, argv[i]);
-        //printf("%d copying %s\n", getpid(), argv[i]);
-        execl("/bin/cp", "cp", source, dir_2, (char*)0);
-        exit(1);
+        //Copia di file dir1 -> dir2
+        printf("Figlio %d esegue cp...\n", getpid());
+        char dir_and_file[MAX_STRING_LENGTH] = "";
+        char error_log[MAX_STRING_LENGTH] = "";
+        strcat(dir_and_file, dir_1);
+        strcat(dir_and_file, "/");
+        strcat(dir_and_file, argv[i]);
+        execlp("cp", "cp", dir_and_file, dir_2, (char*)0);
+        sprintf(error_log, "Errore in fase di copiatura di %s , pid:%d", dir_and_file, getpid());
+        perror(error_log);
+        exit(EXIT_FAILURE);
       }else{                //Eseguito da figli con pid dispari
-        char toDelete[2048];
-        strcpy(toDelete, dir_1);
-        strcat(toDelete, "/");
-        strcat(toDelete, argv[i]);
-        //printf("%d removing %s\n", getpid(), argv[i]);
-        execl("/bin/rm", "rm", toDelete, (char*)0);
-        exit(1);
+        //Rmiozione di file su dir1
+        printf("Figlio %d esegue rm...\n", getpid());
+        char dir_and_file[MAX_STRING_LENGTH] = "";
+        char error_log[MAX_STRING_LENGTH] = "";
+        strcat(dir_and_file, dir_1);
+        strcat(dir_and_file, "/");
+        strcat(dir_and_file, argv[i]);
+        execlp("rm", "rm", dir_and_file, (char*)0);
+        sprintf(error_log, "Errore in fase di rimozione di %s , pid:%d", dir_and_file, getpid());
+        perror(error_log);
+        exit(EXIT_FAILURE);
       }
     }else if(pid < 0){     //Codice di errore
-      perror("Fork creation error!\n");
-      exit(1);
+      char buff[1024] = "";
+      sprintf(buff,"Padre: impossibile fare fork %d\n", i);
+      perror(buff);
+      exit(EXIT_FAILURE);
     }
   }
 
+  //Se tutti i figli terminano volontariamente: stampa ls di dir2
+  //Se almeno un figlio non termina volontariamente allora stampa errore e pid errore
+
   //Raccolgo tutti i risultati
-  for(int i = 3; i < argc && !childError; i++){
+  bool childError = false;
+  for(int i = 3; i < argc; i++){
     int pid_figlio = wait(&status);
-    if(WIFSIGNALED(status)){
-      printf("Errore scatenato dal processo con pid:%d\n", pid_figlio);
+    if(WIFEXITED(status) && WEXITSTATUS(status) != EXIT_SUCCESS){
+      fprintf(stderr, "Padre: errore del figlio: %d\n", pid_figlio);
+      childError = true;
+    }else if(WIFSIGNALED(status)){
+      fprintf(stderr, "Padre: figlio interrotto, errore complesso.\n");
       childError = true;
     }
   }
-  if(childError){
-    printf("Chiusura, causa errore no ls per nessuno! :/ \n");
-    return 0;
-  }else{
-    execl("/bin/ls", "ls", dir_2, (char*)0);
-    exit(1);
+  printf("Lo stato di childError e': %d \n", childError);
+  if(!childError){
+    execlp("ls", "ls", dir_2, (char*)0);
+    perror("ls del padre fallita\n");
+    return EXIT_FAILURE;
   }
-
 
 
 }
