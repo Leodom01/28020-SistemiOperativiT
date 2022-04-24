@@ -15,7 +15,7 @@ int compito=-1; //compito per P2
 float S=0.0; //variabile per sommatoria
 int pid1, pid2;
 int terminati=0;
-
+    
 void print_usage(char* prog_name){
     fprintf(stderr, "Usage:\n\t%s N\n", prog_name);
 }
@@ -40,21 +40,21 @@ void P0_handler(int signo){
     terminati++;
     printf("P0 (%d): ricevuto sigchld: un figlio è terminato.\n",getpid());
     pid=wait(&status);
-    if ((char)status==0)
+    if ((char)status==0) 
         printf("P0: il figlio %d è terminato volontariamente con stato %d\n",pid, status>>8);
-    else
+    else 
         printf("P0: il figlio  %d è  terminato involontariamente per segnale %d\n",pid, (char)status);
     if  (terminati==2) //entrambi i figli sono terminati
     {   printf("P0: ho finito.\n");
         exit(0);
     }
-
+    
 }
 
 
 int main(int argc, char* argv[])
-{   // Controllo argomenti:
-
+{   // Controllo argomenti:    
+ 
     if (argc != 2) {
         fprintf(stderr, "Errore nel numero di argomenti\n");
         print_usage(argv[0]);
@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
         exit(EXIT_FAILURE);
     }
     signal(SIGCHLD, P0_handler); //solo per P0
-
+    
      // creazione P1
     pid1 = fork();
     if (pid1==0){ //P1
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
             perror("P1: top fallito -");
             exit(-1);
     }
-
+    
     signal(SIGUSR1, P2_handler); //solo per P2
     signal(SIGUSR2, P2_handler); //solo per P2
     signal(SIGALRM, P2_handler); //solo per P2
@@ -90,14 +90,14 @@ int main(int argc, char* argv[])
         }
         exit(-1); //non dovrebbe servire
     }
-
+    
     //P0:
     sleep(1);
     if (getpid()%2==0)
             kill(pid2, SIGUSR1);
     else
             kill(pid2,SIGUSR2);
-
+     
     //padre p0:
     for(int i=0;;i++){
         sleep(2);
