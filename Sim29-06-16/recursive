@@ -1,0 +1,13 @@
+#!/bin/bash
+
+cd "$1"
+
+for i in *; do
+  if [[ -d "$i" ]]; then "$0" "$i" "$2" "$3" "$4"; fi
+  if [[ -f "$i" ]]; then
+    if [[ `grep "$2" -o "$i" | wc -l` -ge $3 ]]; then
+      cp "$i" "$4"/"$i"
+    fi
+    echo `pwd`/"$i" `grep "$2" -o "$i" | wc -l` >> "$4/all.out"
+  fi
+done

@@ -1,0 +1,32 @@
+#!/bin/bash
+
+if [ $# -ne 4 ] ; then echo Sintassi! ; exit 1; fi
+if [[ ! -d "$1" ]]; then echo "$1" Non è una directory esistente! ; exit 1; fi
+if [[ ! -d "$4" ]]; then echo "$4" Non è una directory esistente! ; exit 1; fi
+if [[ $3 = *[!0-9]* ]]; then echo N deve essere positivo! ; exit 1; fi
+if [[ "$2" = *[!a-zA-Z]*]]; then echo word deve essere solo caratteri!; exit 1; fi
+
+#Se i path non solo assoluti li rendo tali
+if [[! "$1" = /* ]]; then $1="`pwd`/$1";
+if [[! "$4" = /* ]]; then $4="`pwd`/$4";
+
+#Capisco come chiamare il recursive
+if [[ "$0" = /* ]] ; then
+  #allora $0 è assoluto
+  dir_name=`dirname "$0"`
+  recursive_cmd="$dir_name/recursive"
+elif [[ "$0" = */* ]] ; then
+  #Se non inizia con / ma / è nel mezzo allora è un path relativo
+  dir_name=`dirname "$0"`
+  recursive_cmd="`pwd`/$dir_name/recursive.sh"
+else
+  #Se non è ne'realtivo ne'assoluto
+  recursive_cmd="recursive.sh"
+fi
+
+> "$4"/all.out
+
+"recursive_cmd" "$1" "$2" "$3" "$4"
+
+echo Ecco il file all.out sir...
+cat all.out
